@@ -33,6 +33,28 @@ class TestPlaylistTitles(unittest.TestCase):
             backend.get_playlist_id_by_name(yt, "Marceline songs <3"), "PL_existing"
         )
 
+    def test_create_strips_whitespace(self):
+        yt = MagicMock()
+        yt.create_playlist.return_value = "PL_new"
+        with patch.object(backend.time, "sleep"):
+            backend._ytmusic_create_playlist(yt, "Coding Mode  ", "Coding Mode  ")
+
+        self.assertEqual(yt.create_playlist.call_args.kwargs["title"], "Coding Mode")
+
+    def test_lookup_matches_despite_stray_whitespace(self):
+        #  A title that still has whitespace should find a playlist YTMusic stored
+        #  trimmed, and a trimmed lookup title should still find it either way.
+        yt = MagicMock()
+        yt.get_library_playlists.return_value = [
+            {"title": "Coding Mode", "playlistId": "PL_existing"}
+        ]
+        self.assertEqual(
+            backend.get_playlist_id_by_name(yt, "Coding Mode  "), "PL_existing"
+        )
+        self.assertEqual(
+            backend.get_playlist_id_by_name(yt, "Coding Mode"), "PL_existing"
+        )
+
 
 class TestCopier(unittest.TestCase):
     def run_copier(self, yt, dst_pl_id="PL_test"):

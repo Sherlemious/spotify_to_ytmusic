@@ -34,8 +34,13 @@ def get_ytmusic() -> YTMusic:
 
 
 def _ytmusic_safe_title(title: str) -> str:
-    """YTMusic rejects "<" and ">" in playlist titles; swap in look-alike characters."""
-    return title.replace("<", "‹").replace(">", "›")
+    """Normalize a title the way YTMusic will store it.
+
+    YTMusic trims leading/trailing whitespace off playlist titles, so a title that
+    still has it would never match on lookup and get re-created (and re-copied) on
+    every run.  It also rejects "<" and ">"; swap in look-alike characters for those.
+    """
+    return title.strip().replace("<", "‹").replace(">", "›")
 
 
 def _ytmusic_create_playlist(
@@ -213,7 +218,7 @@ def get_playlist_id_by_name(yt: YTMusic, title: str) -> Optional[str]:
 
     title = _ytmusic_safe_title(title)
     for pl in playlists:
-        if pl["title"] == title:
+        if _ytmusic_safe_title(pl["title"]) == title:
             return pl["playlistId"]
 
     return None
